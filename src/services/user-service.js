@@ -19,10 +19,26 @@ class UserService{
         }
     }
 
+    async signIn(email,plainPassword){
+        try{
+            const user = await this.userRepository.getByEmail(email);
+            const passwordMatch=this.checkPassword(plainPassword,user.password);
+            if(!passwordMatch){
+                console.log("Password doesn't match");
+                throw {error: 'Incorrect password'};
+            }
+            const newJWT = this.createToken({email:user.email,id:user.id});
+            return newJWT;
+        }catch(error){
+            console.log("something went wrong in the service layer");
+            throw error;
+        }
+    }
+
      createToken(user) {
         try{
-            const result =jwt.sign(user,JWT_KEY,{expiresIn:'1h'});
-            return result;
+            const result =jwt.sign(user,JWT_KEY);
+            return result;   
         }catch(error){
             console.log("something went wrong in token creation");
             throw error;
@@ -40,7 +56,7 @@ class UserService{
 
      checkPassword(userInputPlainPassword,encryptedPassword){
          try{
-           return bcrypt.compareSync(userInputPlainPassword,encryptedPassword);
+           return bcrypt.compareSync(userInputPlainPassword,encryptedPassword); 
          }catch(error){
             console.log("something went wrong in password comparison");
             throw error;
